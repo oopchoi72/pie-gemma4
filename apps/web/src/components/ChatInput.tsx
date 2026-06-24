@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState, type ClipboardEvent } from 'react';
 import type { OutgoingChatImage } from '../api/client';
 import {
   fileToPendingImage,
@@ -23,6 +23,14 @@ export function ChatInput({
   const [value, setValue] = useState('');
   const [attachments, setAttachments] = useState<PendingImage[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePaste = (event: ClipboardEvent) => {
+    const files = readClipboardImages(event.clipboardData);
+    if (files.length === 0) return;
+    event.preventDefault();
+    void addFiles(files);
+  };
 
   const canSend =
     !disabled && (value.trim().length > 0 || attachments.length > 0);
@@ -53,8 +61,23 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-white/10 bg-[#0f1528] p-4">
+    <div
+      className="border-t border-white/10 bg-[#0f1528] p-4"
+      onPaste={handlePaste}
+    >
       <div className="mx-auto max-w-4xl space-y-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
+          className="hidden"
+          onChange={(event) => {
+            const selected = [...(event.target.files ?? [])];
+            event.target.value = '';
+            void addFiles(selected);
+          }}
+        />
         {attachments.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {attachments.map((image) => (
@@ -85,22 +108,26 @@ export function ChatInput({
         ) : null}
 
         <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled}
+            title="이미지 첨부"
+            className="h-fit rounded-xl border border-white/10 px-3 py-3 text-sm text-gray-300 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            🖼
+          </button>
           <textarea
             value={value}
             onChange={(event) => setValue(event.target.value)}
-            onPaste={(event) => {
-              const files = readClipboardImages(event.clipboardData);
-              if (files.length === 0) return;
-              event.preventDefault();
-              void addFiles(files);
-            }}
+            onPaste={handlePaste}
             onKeyDown={(event) => {
               if (event.key === 'Enter' && !event.shiftKey) {
                 event.preventDefault();
                 submit();
               }
             }}
-            placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈, Ctrl+V 이미지 붙여넣기)"
+            placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈, 붙여넣기/🖼 이미지 첨부)"
             rows={3}
             disabled={disabled}
             className="min-h-[88px] flex-1 resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-gray-500 focus:border-indigo-400"
