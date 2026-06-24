@@ -5,12 +5,23 @@ export interface SessionMeta {
   mode: 'chat' | 'agent';
 }
 
+export interface ChatImageAttachment {
+  mimeType: string;
+  dataUrl: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  images?: ChatImageAttachment[];
   timestamp?: number;
   streaming?: boolean;
+}
+
+export interface OutgoingChatImage {
+  data: string;
+  mimeType: string;
 }
 
 export interface ToolRun {
@@ -90,13 +101,17 @@ export async function abortSession(sessionId: string) {
 export async function streamChat(
   sessionId: string,
   message: string,
+  images: OutgoingChatImage[],
   onEvent: (event: SseEvent) => void,
   signal?: AbortSignal,
 ) {
   const response = await fetch(`/api/sessions/${sessionId}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({
+      message,
+      images: images.length > 0 ? images : undefined,
+    }),
     signal,
   });
 

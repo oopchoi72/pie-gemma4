@@ -57,7 +57,7 @@ export default function App() {
           error={sessionError ?? error}
           isStreaming={isStreaming}
           disabled={!activeSessionId}
-          onSend={(message) => void sendMessage(message)}
+          onSend={(message, images) => void sendMessage(message, images)}
           onAbort={() => void abort()}
         />
       ) : (

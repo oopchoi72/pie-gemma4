@@ -1,6 +1,6 @@
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
-import type { ChatMessage, ToolRun } from '../api/client';
+import type { ChatMessage, OutgoingChatImage, ToolRun } from '../api/client';
 import { ToolTimeline } from './ToolTimeline';
 
 interface ChatWindowProps {
@@ -12,7 +12,7 @@ interface ChatWindowProps {
   error: string | null;
   isStreaming: boolean;
   disabled?: boolean;
-  onSend: (message: string) => void;
+  onSend: (message: string, images: OutgoingChatImage[]) => void;
   onAbort: () => void;
 }
 
@@ -52,7 +52,7 @@ export function ChatWindow({
       <ChatInput
         disabled={disabled}
         isStreaming={isStreaming}
-        onSend={onSend}
+          onSend={(message, images) => void onSend(message, images)}
         onAbort={onAbort}
       />
     </section>

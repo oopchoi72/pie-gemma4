@@ -71,6 +71,18 @@ bash scripts/test-chat.sh "https://wikidocs.net/book/20347 내용 요약해줘"
 - `.pie/extensions/web-agent.ts` — URL 선-fetch·SSRF 검증·bash 차단
 - UI에 도구 실행 타임라인 표시 (`fetch_url ✓`)
 
+#### 이미지 붙여넣기
+
+채팅 입력창에 **클립보드 이미지를 Ctrl+V(⌘+V)** 로 붙여넣을 수 있다. 최대 4장, 8MB/장. 서버에서 리사이즈 후 pie `session.prompt(..., { images })`로 모델에 전달한다.
+
+- `.pie/models.json`의 `input`에 `"image"` 포함 필요 (현재 `["text","image"]`)
+- 모델이 vision을 지원해야 실제 해석 가능 (미지원 시 텍스트만 응답하거나 오류 가능)
+
+```bash
+# 이미지+텍스트 (스크립트는 텍스트만; UI에서 붙여넣기 테스트 권장)
+# 브라우저: 입력창에 스크린샷 붙여넣기 → "이 이미지 설명해줘"
+```
+
 #### E2E 테스트
 
 ```bash

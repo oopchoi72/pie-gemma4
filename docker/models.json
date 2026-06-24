@@ -13,7 +13,7 @@
           "id": "xentriom/gemma-4-12B-coder-fable5-composer2.5-v1",
           "name": "Gemma 4 12B Coder (Ollama)",
           "reasoning": false,
-          "input": ["text"],
+          "input": ["text", "image"],
           "contextWindow": 128000,
           "maxTokens": 8192,
           "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }

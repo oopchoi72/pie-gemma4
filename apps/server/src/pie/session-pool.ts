@@ -3,6 +3,14 @@ import { randomUUID } from 'node:crypto';
 import { createChatSession } from './factory.js';
 import type { PieMode } from '../config.js';
 
+interface ImagePart {
+  type: 'image';
+  data: string;
+  mimeType: string;
+}
+
+type ContentPart = TextPart | ImagePart;
+
 interface TextPart {
   type: 'text';
   text: string;
@@ -10,7 +18,7 @@ interface TextPart {
 
 type MessageLike = {
   role: string;
-  content: string | TextPart[];
+  content: string | ContentPart[];
   timestamp: number;
 };
 
@@ -25,6 +33,16 @@ export interface StoredSession {
   meta: ChatSessionMeta;
   session: AgentSession;
   isStreaming: boolean;
+}
+
+function extractImages(message: MessageLike) {
+  if (message.role !== 'user' || !Array.isArray(message.content)) return [];
+  return message.content
+    .filter((part): part is ImagePart => part.type === 'image')
+    .map((part) => ({
+      mimeType: part.mimeType,
+      dataUrl: `data:${part.mimeType};base64,${part.data}`,
+    }));
 }
 
 function extractText(message: MessageLike): string {
@@ -95,13 +113,21 @@ export class SessionPool {
     const entry = this.require(id);
     return entry.session.messages
       .filter((message) => message.role === 'user' || message.role === 'assistant')
-      .map((message) => ({
-        id: `${message.timestamp}-${message.role}`,
-        role: message.role as 'user' | 'assistant',
-        content: extractText(message as MessageLike),
-        timestamp: message.timestamp,
-      }))
-      .filter((message) => message.content.length > 0);
+      .map((message) => {
+        const like = message as MessageLike;
+        const images = extractImages(like);
+        return {
+          id: `${message.timestamp}-${message.role}`,
+          role: message.role as 'user' | 'assistant',
+          content: extractText(like),
+          images: images.length > 0 ? images : undefined,
+          timestamp: message.timestamp,
+        };
+      })
+      .filter(
+        (message) =>
+          message.content.length > 0 || (message.images?.length ?? 0) > 0,
+      );
   }
 
   setStreaming(id: string, isStreaming: boolean) {

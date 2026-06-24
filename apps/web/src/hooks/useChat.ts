@@ -4,6 +4,7 @@ import {
   fetchMessages,
   streamChat,
   type ChatMessage,
+  type OutgoingChatImage,
   type SseEvent,
   type ToolRun,
 } from '../api/client';
@@ -40,13 +41,21 @@ export function useChat(sessionId: string | null) {
   }, [sessionId]);
 
   const sendMessage = useCallback(
-    async (text: string) => {
-      if (!sessionId || !text.trim() || isStreaming) return;
+    async (text: string, images: OutgoingChatImage[] = []) => {
+      if (!sessionId || isStreaming) return;
+      if (!text.trim() && images.length === 0) return;
 
       const userMessage: ChatMessage = {
         id: `user-${Date.now()}`,
         role: 'user',
         content: text.trim(),
+        images:
+          images.length > 0
+            ? images.map((image) => ({
+                mimeType: image.mimeType,
+                dataUrl: `data:${image.mimeType};base64,${image.data}`,
+              }))
+            : undefined,
       };
       const assistantId = `assistant-${Date.now()}`;
       const assistantMessage: ChatMessage = {
@@ -157,7 +166,13 @@ export function useChat(sessionId: string | null) {
       };
 
       try {
-        await streamChat(sessionId, text.trim(), handleEvent, controller.signal);
+        await streamChat(
+          sessionId,
+          text.trim(),
+          images,
+          handleEvent,
+          controller.signal,
+        );
       } catch (err) {
         if (!(err instanceof DOMException && err.name === 'AbortError')) {
           setError(err instanceof Error ? err.message : 'Chat failed');

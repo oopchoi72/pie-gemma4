@@ -19,7 +19,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         }`}
       >
         {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          <div className="space-y-2">
+            {message.images?.map((image, index) => (
+              <img
+                key={`${message.id}-image-${index}`}
+                src={image.dataUrl}
+                alt="첨부 이미지"
+                className="max-h-64 rounded-lg border border-white/20 object-contain"
+              />
+            ))}
+            {message.content ? (
+              <p className="whitespace-pre-wrap">{message.content}</p>
+            ) : null}
+          </div>
         ) : (
           <div className="prose prose-invert prose-sm max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>

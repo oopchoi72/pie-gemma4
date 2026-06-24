@@ -6,6 +6,10 @@ import {
   needsContinuation,
 } from '../pie/response-quality.js';
 import {
+  normalizeIncomingImages,
+  toPromptImages,
+} from '../pie/images.js';
+import {
   getLastAssistantText,
   SessionNotFoundError,
   type SessionPool,
@@ -119,12 +123,31 @@ export async function registerChatRoutes(
   app: FastifyInstance,
   pool: SessionPool,
 ) {
-  app.post<{ Params: { id: string }; Body: { message?: string } }>(
+  app.post<{
+    Params: { id: string };
+    Body: {
+      message?: string;
+      images?: Array<{ data?: string; mimeType?: string }>;
+    };
+  }>(
     '/api/sessions/:id/chat',
     async (request, reply) => {
-      const message = request.body?.message?.trim();
-      if (!message) {
-        return reply.code(400).send({ error: 'message is required' });
+      const message = request.body?.message?.trim() ?? '';
+      let promptImages;
+      try {
+        promptImages = await toPromptImages(
+          normalizeIncomingImages(request.body?.images),
+        );
+      } catch (error) {
+        const errMessage =
+          error instanceof Error ? error.message : 'Invalid image payload';
+        return reply.code(400).send({ error: errMessage });
+      }
+
+      if (!message && promptImages.length === 0) {
+        return reply
+          .code(400)
+          .send({ error: 'message or images is required' });
       }
 
       let entry;
@@ -168,11 +191,16 @@ export async function registerChatRoutes(
         const maxContinues = 2;
 
         for (let attempt = 0; attempt <= maxContinues; attempt++) {
-          await entry.session.prompt(followUp);
+          const promptOptions =
+            attempt === 0 && promptImages.length > 0
+              ? { images: promptImages }
+              : undefined;
+          await entry.session.prompt(followUp, promptOptions);
 
           const assistantText = getLastAssistantText(entry.session);
           if (!needsContinuation(message, assistantText)) break;
           if (attempt === maxContinues) break;
+          if (promptImages.length > 0) break;
 
           writeSse(write, { type: 'reset' });
           followUp = CONTINUE_PROMPT;
