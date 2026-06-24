@@ -1,4 +1,4 @@
-import { useRef, useState, type ClipboardEvent } from 'react';
+import { useRef, useState, type ClipboardEvent, type KeyboardEvent } from 'react';
 import type { OutgoingChatImage } from '../api/client';
 import {
   fileToPendingImage,
@@ -24,6 +24,9 @@ export function ChatInput({
   const [attachments, setAttachments] = useState<PendingImage[]>([]);
   const [attachError, setAttachError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isComposingRef = useRef(false);
+  const suppressInputRef = useRef(false);
 
   const handlePaste = (event: ClipboardEvent) => {
     const files = readClipboardImages(event.clipboardData);
@@ -47,6 +50,18 @@ export function ChatInput({
     }
   };
 
+  const clearInput = () => {
+    suppressInputRef.current = true;
+    setValue('');
+    setAttachments([]);
+    setAttachError(null);
+    requestAnimationFrame(() => {
+      const el = textareaRef.current;
+      if (el && el.value !== '') el.value = '';
+      suppressInputRef.current = false;
+    });
+  };
+
   const submit = () => {
     if (!canSend || isStreaming) return;
     onSend(
@@ -56,9 +71,14 @@ export function ChatInput({
         mimeType: image.mimeType,
       })),
     );
-    setValue('');
-    setAttachments([]);
-    setAttachError(null);
+    clearInput();
+  };
+
+  const handleEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== 'Enter' || event.shiftKey) return;
+    if (isComposingRef.current || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    submit();
   };
 
   return (
@@ -116,15 +136,27 @@ export function ChatInput({
             🖼
           </button>
           <textarea
+            ref={textareaRef}
             value={value}
-            onChange={(event) => setValue(event.target.value)}
-            onPaste={handlePaste}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
-                submit();
+            onChange={(event) => {
+              if (suppressInputRef.current) {
+                event.target.value = '';
+                return;
+              }
+              setValue(event.target.value);
+            }}
+            onCompositionStart={() => {
+              isComposingRef.current = true;
+            }}
+            onCompositionEnd={(event) => {
+              isComposingRef.current = false;
+              if (suppressInputRef.current) {
+                event.currentTarget.value = '';
+                setValue('');
               }
             }}
+            onPaste={handlePaste}
+            onKeyDown={handleEnter}
             placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈, 붙여넣기/🖼 이미지 첨부)"
             rows={3}
             disabled={disabled}
