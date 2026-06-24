@@ -60,6 +60,20 @@ npm run docker:down
 
 호스트에 이미 Ollama가 떠 있으면 `docker-compose.yml`의 `ollama` 서비스를 제거하고 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`로 server env를 바꾸면 됨.
 
+#### E2E 테스트
+
+```bash
+bash scripts/test-chat.sh
+```
+
+#### OOM (`signal: killed`) 트러블슈팅
+
+12B Q4 모델은 Docker VM 메모리 ~8GB에서는 KV cache + weights 로드 시 OOM으로 kill될 수 있다. 아래 순서로 시도:
+
+1. **Docker Desktop RAM 증가** (권장 12GB) — Docker Desktop → Settings → Resources → Memory. 적용 후 Docker 재시작.
+2. **`contextWindow` 축소** — `.pie/models.json`, `docker/models.json`에서 `128000` → `8192`.
+3. **호스트 Ollama 사용** — Docker `ollama` 서비스 제거, server에 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` + `extra_hosts: ["host.docker.internal:host-gateway"]`.
+
 ---
 
 ## pie CLI 레퍼런스
