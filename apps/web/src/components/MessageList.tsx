@@ -14,7 +14,7 @@ export function MessageList({ messages }: MessageListProps) {
   }, [messages]);
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto px-4 py-6">
+    <div className="min-w-0 flex-1 space-y-4 overflow-y-auto overflow-x-hidden px-4 py-6">
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center text-sm text-gray-400">
           프롬프트를 입력하면 pie가 답변합니다.

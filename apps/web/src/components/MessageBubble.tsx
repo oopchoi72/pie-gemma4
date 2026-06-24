@@ -10,9 +10,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user';
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex min-w-0 ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 ${
+        className={`max-w-[85%] min-w-0 rounded-2xl px-4 py-3 text-sm leading-6 ${
           isUser
             ? 'bg-indigo-600 text-white'
             : 'border border-white/10 bg-white/5 text-gray-100'
@@ -29,11 +29,13 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               />
             ))}
             {message.content ? (
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+                {message.content}
+              </p>
             ) : null}
           </div>
         ) : (
-          <div className="prose prose-invert prose-sm max-w-none">
+          <div className="prose prose-invert prose-sm max-w-none break-words [overflow-wrap:anywhere]">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {message.content || (message.streaming ? '…' : '')}
             </ReactMarkdown>
