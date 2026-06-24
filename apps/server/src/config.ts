@@ -43,7 +43,8 @@ export const config = {
 };
 
 export function getToolsForMode(mode: PieMode): string[] {
-  return mode === 'chat'
-    ? ['read', 'grep', 'find', 'ls']
-    : ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
+  // Web chat mode: no tool schemas in context — avoids local-model hallucination
+  // and mid-response EOS when describing capabilities.
+  if (mode === 'chat') return [];
+  return ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
 }

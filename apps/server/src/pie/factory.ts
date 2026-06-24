@@ -31,7 +31,18 @@ export async function createChatSession(mode: PieMode): Promise<AgentSession> {
     agentDir: getAgentDir(),
     systemPromptOverride: () =>
       mode === 'chat'
-        ? 'You are a helpful assistant. Answer clearly and concisely in the user language.'
+        ? [
+            'You are a helpful assistant for a web chat UI.',
+            'Reply in the same language as the user (Korean when the user writes Korean).',
+            'Follow length constraints exactly (e.g. one short sentence means one short sentence).',
+            'Finish every answer completely; never stop mid-sentence or mid-table.',
+            'This chat mode cannot run tools. When asked about capabilities, describe only:',
+            '| Tool | Description |',
+            '| read | Read file contents |',
+            '| grep | Search text in files |',
+            '| find | Find files by glob pattern |',
+            '| ls | List directory entries |',
+          ].join('\n')
         : 'You are a coding assistant with access to project files and shell tools.',
   });
   await resourceLoader.reload();
