@@ -37,6 +37,29 @@ apps/web      Vite + React 챗 UI
 docs/plan.md       아키텍처 계획
 ```
 
+### Docker 실행
+
+호스트 Ollama 대신 컨테이너로 전체 스택을 띄울 때:
+
+```bash
+# 빌드 + 백그라운드 기동
+npm run docker:up
+
+# Ollama 모델 pull (최초 1회)
+npm run docker:pull-model
+
+# 로그
+npm run docker:logs
+
+# 종료
+npm run docker:down
+```
+
+- Web UI: http://localhost:5173 (nginx → `/api` 프록시 → server)
+- Ollama API: http://localhost:11434
+
+호스트에 이미 Ollama가 떠 있으면 `docker-compose.yml`의 `ollama` 서비스를 제거하고 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`로 server env를 바꾸면 됨.
+
 ---
 
 ## pie CLI 레퍼런스

@@ -9,7 +9,11 @@
     "dev:server": "npm run dev -w @pie-gemma4/server",
     "dev:web": "npm run dev -w @pie-gemma4/web",
     "build": "npm run build -w @pie-gemma4/server && npm run build -w @pie-gemma4/web",
-    "typecheck": "npm run typecheck -w @pie-gemma4/server && npm run typecheck -w @pie-gemma4/web"
+    "typecheck": "npm run typecheck -w @pie-gemma4/server && npm run typecheck -w @pie-gemma4/web",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:pull-model": "docker compose exec ollama ollama pull hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

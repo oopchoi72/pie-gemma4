@@ -22,6 +22,10 @@ export async function createChatSession(mode: PieMode): Promise<AgentSession> {
     );
   }
 
+  if (config.ollamaBaseUrl) {
+    model.baseUrl = config.ollamaBaseUrl;
+  }
+
   const resourceLoader = new DefaultResourceLoader({
     cwd: config.pieCwd,
     agentDir: getAgentDir(),

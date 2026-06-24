@@ -27,7 +27,13 @@ export const config = {
   pieMode: parseMode(process.env.PIE_MODE),
   pieCwd: path.resolve(projectRoot, process.env.PIE_CWD ?? '.'),
   projectRoot,
-  modelsJsonPath: path.join(projectRoot, '.pie', 'models.json'),
+  modelsJsonPath:
+    process.env.MODELS_JSON_PATH ??
+    path.join(projectRoot, '.pie', 'models.json'),
+  corsOrigins: (process.env.CORS_ORIGINS ?? 'http://127.0.0.1:5173,http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   provider: 'ollama' as const,
   modelName:
     process.env.MODEL_NAME ??
