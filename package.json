@@ -13,7 +13,7 @@
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "docker:pull-model": "ollama pull gemma4:e2b-it-qat"
+    "docker:pull-model": "ollama pull xentriom/gemma-4-12B-coder-fable5-composer2.5-v1"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
