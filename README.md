@@ -39,14 +39,14 @@ docs/plan.md       아키텍처 계획
 
 ### Docker 실행
 
-호스트 Ollama 대신 컨테이너로 전체 스택을 띄울 때:
+Docker는 **server + web만** 띄우고, Ollama는 **호스트(Mac Metal GPU)** 에서 실행한다. Docker 컨테이너 안 Ollama는 GPU를 못 쓴다.
 
 ```bash
-# 빌드 + 백그라운드 기동
-npm run docker:up
+# 1) 호스트 Ollama 실행 (앱 또는 ollama serve)
+ollama pull gemma4:e2b-it-qat
 
-# Ollama 모델 pull (최초 1회)
-npm run docker:pull-model
+# 2) Docker server + web
+npm run docker:up
 
 # 로그
 npm run docker:logs
@@ -56,9 +56,8 @@ npm run docker:down
 ```
 
 - Web UI: http://localhost:5173 (nginx → `/api` 프록시 → server)
-- Ollama API: http://localhost:11434
-
-호스트에 이미 Ollama가 떠 있으면 `docker-compose.yml`의 `ollama` 서비스를 제거하고 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1`로 server env를 바꾸면 됨.
+- Ollama API: http://localhost:11434 (호스트)
+- server → `http://host.docker.internal:11434/v1` 로 호스트 Ollama 연결
 
 #### E2E 테스트
 
@@ -72,7 +71,7 @@ bash scripts/test-chat.sh
 
 1. **Docker Desktop RAM 증가** (권장 12GB) — Docker Desktop → Settings → Resources → Memory. 적용 후 Docker 재시작.
 2. **`contextWindow` 축소** — `.pie/models.json`, `docker/models.json`에서 `128000` → `8192`.
-3. **호스트 Ollama 사용** — Docker `ollama` 서비스 제거, server에 `OLLAMA_BASE_URL=http://host.docker.internal:11434/v1` + `extra_hosts: ["host.docker.internal:host-gateway"]`.
+3. **호스트 Ollama 사용** (권장) — Docker Ollama 대신 Mac Metal GPU. 현재 `docker-compose.yml` 기본 구성.
 
 ---
 
