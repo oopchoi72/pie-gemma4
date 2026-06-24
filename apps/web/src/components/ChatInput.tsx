@@ -29,6 +29,7 @@ export function ChatInput({
     const files = readClipboardImages(event.clipboardData);
     if (files.length === 0) return;
     event.preventDefault();
+    event.stopPropagation();
     void addFiles(files);
   };
 
@@ -61,10 +62,7 @@ export function ChatInput({
   };
 
   return (
-    <div
-      className="border-t border-white/10 bg-[#0f1528] p-4"
-      onPaste={handlePaste}
-    >
+    <div className="border-t border-white/10 bg-[#0f1528] p-4">
       <div className="mx-auto max-w-4xl space-y-3">
         <input
           ref={fileInputRef}
