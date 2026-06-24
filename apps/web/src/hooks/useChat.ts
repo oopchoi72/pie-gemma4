@@ -75,6 +75,17 @@ export function useChat(sessionId: string | null) {
           return;
         }
 
+        if (event.type === 'reset') {
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === assistantId
+                ? { ...message, content: '', streaming: true }
+                : message,
+            ),
+          );
+          return;
+        }
+
         if (event.type === 'tool_start') {
           setToolEvents((prev) => [...prev, `▶ ${event.toolName}`]);
           return;

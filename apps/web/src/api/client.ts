@@ -15,6 +15,7 @@ export interface ChatMessage {
 
 export type SseEvent =
   | { type: 'delta'; text: string }
+  | { type: 'reset' }
   | { type: 'tool_start'; toolName: string }
   | { type: 'tool_end'; toolName: string; isError: boolean }
   | { type: 'error'; message: string }

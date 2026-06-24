@@ -1,4 +1,5 @@
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ChatMessage } from '../api/client';
 
 interface MessageBubbleProps {
@@ -21,7 +22,9 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <p className="whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div className="prose prose-invert prose-sm max-w-none">
-            <ReactMarkdown>{message.content || (message.streaming ? '…' : '')}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {message.content || (message.streaming ? '…' : '')}
+            </ReactMarkdown>
             {message.streaming ? (
               <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-indigo-300" />
             ) : null}

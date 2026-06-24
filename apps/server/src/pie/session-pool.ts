@@ -46,6 +46,14 @@ function extractText(message: MessageLike): string {
     .join('');
 }
 
+export function getLastAssistantText(session: AgentSession): string {
+  const message = [...session.messages]
+    .reverse()
+    .find((entry) => entry.role === 'assistant');
+  if (!message) return '';
+  return extractText(message as MessageLike);
+}
+
 export class SessionPool {
   private sessions = new Map<string, StoredSession>();
   private defaultMode: PieMode;

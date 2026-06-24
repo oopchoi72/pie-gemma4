@@ -1,12 +1,19 @@
 import type { AgentSessionEvent } from '@pie-lab/coding-agent';
 import type { FastifyInstance } from 'fastify';
 import {
+  augmentUserMessage,
+  CONTINUE_PROMPT,
+  needsContinuation,
+} from '../pie/response-quality.js';
+import {
+  getLastAssistantText,
   SessionNotFoundError,
   type SessionPool,
 } from '../pie/session-pool.js';
 
 type SsePayload =
   | { type: 'delta'; text: string }
+  | { type: 'reset' }
   | { type: 'tool_start'; toolName: string }
   | { type: 'tool_end'; toolName: string; isError: boolean }
   | { type: 'error'; message: string }
@@ -102,28 +109,39 @@ export async function registerChatRoutes(
           streamedText = true;
         }
         if (payload) writeSse(write, payload);
-        if (event.type === 'agent_end') {
-          if (!streamedText) {
-            const lastAssistant = [...entry.session.messages]
-              .reverse()
-              .find((message) => message.role === 'assistant');
-
-            const errorText =
-              lastAssistant &&
-              'stopReason' in lastAssistant &&
-              lastAssistant.stopReason === 'error'
-                ? entry.session.agent.state.errorMessage ??
-                  'LLM returned an error'
-                : 'No response from model. Check Ollama model is pulled.';
-
-            writeSse(write, { type: 'error', message: errorText });
-          }
-          writeSse(write, { type: 'done' });
-        }
       });
 
       try {
-        await entry.session.prompt(message);
+        let followUp = augmentUserMessage(message);
+        const maxContinues = 2;
+
+        for (let attempt = 0; attempt <= maxContinues; attempt++) {
+          await entry.session.prompt(followUp);
+
+          const assistantText = getLastAssistantText(entry.session);
+          if (!needsContinuation(message, assistantText)) break;
+          if (attempt === maxContinues) break;
+
+          writeSse(write, { type: 'reset' });
+          followUp = CONTINUE_PROMPT;
+        }
+
+        if (!streamedText) {
+          const lastAssistant = [...entry.session.messages]
+            .reverse()
+            .find((msg) => msg.role === 'assistant');
+
+          const errorText =
+            lastAssistant &&
+            'stopReason' in lastAssistant &&
+            lastAssistant.stopReason === 'error'
+              ? entry.session.agent.state.errorMessage ?? 'LLM returned an error'
+              : 'No response from model. Check Ollama model is pulled.';
+
+          writeSse(write, { type: 'error', message: errorText });
+        }
+
+        writeSse(write, { type: 'done' });
       } catch (error) {
         const errMessage =
           error instanceof Error ? error.message : 'Unknown error';
