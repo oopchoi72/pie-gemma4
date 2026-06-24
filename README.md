@@ -6,7 +6,7 @@
 
 ```bash
 # 1) Ollama에 모델 등록 (이름은 .pie/models.json 과 일치해야 함)
-ollama pull hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M
+ollama pull xentriom/gemma-4-12B-coder-fable5-composer2.5-v1
 
 # 2) 환경 설정
 cp .env.example .env
@@ -263,7 +263,7 @@ pie --export session.jsonl output.html
 export OPENAI_API_KEY=ollama
 export OPENAI_BASE_URL=http://localhost:11434/v1
 
-pie --provider openai --model hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M \
+pie --provider openai --model xentriom/gemma-4-12B-coder-fable5-composer2.5-v1 \
   -p "행렬 회전 알고리즘을 파이썬으로 작성해줘"
 ```
 

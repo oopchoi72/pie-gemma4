@@ -37,7 +37,7 @@ export const config = {
   provider: 'ollama' as const,
   modelName:
     process.env.MODEL_NAME ??
-    'hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M',
+    'xentriom/gemma-4-12B-coder-fable5-composer2.5-v1',
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/v1',
   ollamaApiKey: process.env.OLLAMA_API_KEY ?? 'ollama',
 };

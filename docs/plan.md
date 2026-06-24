@@ -175,7 +175,7 @@ PIE_CWD=./             # pie 작업 디렉터리
 # Ollama / OpenAI-compatible
 OPENAI_API_KEY=ollama
 OPENAI_BASE_URL=http://localhost:11434/v1
-MODEL_NAME=hf.co/yuxinlu1/gemma-4-12B-coder-fable5-composer2.5-v1-GGUF:Q4_K_M
+MODEL_NAME=xentriom/gemma-4-12B-coder-fable5-composer2.5-v1
 
 # Web (Vite proxy)
 VITE_API_URL=http://localhost:3001
