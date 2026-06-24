@@ -90,6 +90,13 @@ export function useChat(sessionId: string | null) {
 
         if (event.type === 'error') {
           setError(event.message);
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === assistantId
+                ? { ...message, content: event.message, streaming: false }
+                : message,
+            ),
+          );
           return;
         }
 

@@ -25,7 +25,20 @@ function mapEventToSse(event: AgentSessionEvent): SsePayload | null {
     if (delta.type === 'text_delta') {
       return { type: 'delta', text: delta.delta };
     }
+    if (delta.type === 'error') {
+      return {
+        type: 'error',
+        message: delta.reason === 'aborted' ? 'Response aborted' : 'LLM stream error',
+      };
+    }
     return null;
+  }
+
+  if (event.type === 'auto_retry_end' && !event.success) {
+    return {
+      type: 'error',
+      message: event.finalError ?? 'LLM request failed after retries',
+    };
   }
 
   if (event.type === 'tool_execution_start') {
@@ -81,10 +94,30 @@ export async function registerChatRoutes(
 
       pool.setStreaming(entry.meta.id, true);
 
+      let streamedText = false;
+
       const unsubscribe = entry.session.subscribe((event) => {
         const payload = mapEventToSse(event);
+        if (payload?.type === 'delta' && payload.text) {
+          streamedText = true;
+        }
         if (payload) writeSse(write, payload);
         if (event.type === 'agent_end') {
+          if (!streamedText) {
+            const lastAssistant = [...entry.session.messages]
+              .reverse()
+              .find((message) => message.role === 'assistant');
+
+            const errorText =
+              lastAssistant &&
+              'stopReason' in lastAssistant &&
+              lastAssistant.stopReason === 'error'
+                ? entry.session.agent.state.errorMessage ??
+                  'LLM returned an error'
+                : 'No response from model. Check Ollama model is pulled.';
+
+            writeSse(write, { type: 'error', message: errorText });
+          }
           writeSse(write, { type: 'done' });
         }
       });
