@@ -52,9 +52,9 @@ export async function toPromptImages(
   for (const image of images) {
     const bytes = Buffer.from(image.data, 'base64');
     const resized = await resizeImage(bytes, image.mimeType, {
-      maxWidth: 1536,
-      maxHeight: 1536,
-      maxBytes: 1.5 * 1024 * 1024,
+      maxWidth: 2048,
+      maxHeight: 2048,
+      maxBytes: 3 * 1024 * 1024,
     });
 
     if (resized) {

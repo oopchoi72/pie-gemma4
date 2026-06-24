@@ -13,10 +13,20 @@ const DANGEROUS_BASH = [
 export function registerWebAgentExtension(pi: ExtensionAPI) {
   pi.on('before_agent_start', async (event) => {
     const urls = extractUrls(event.prompt);
-    const extra: string[] = [
-      'When the user provides an external URL, call fetch_url first.',
-      'Summarize only from fetched page text. If fetch fails, say you do not know.',
-    ];
+    const extra: string[] = [];
+
+    if (event.images?.length) {
+      extra.push(
+        `User attached ${event.images.length} image(s). Analyze the image content first.`,
+        'Transcribe Korean text in images exactly — especially person names and dates.',
+        'Do not say the image is missing.',
+      );
+    } else {
+      extra.push(
+        'When the user provides an external URL, call fetch_url first.',
+        'Summarize only from fetched page text. If fetch fails, say you do not know.',
+      );
+    }
 
     if (urls.length > 0) {
       extra.push(`Detected URL(s): ${urls.join(', ')}`);

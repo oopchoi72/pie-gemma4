@@ -46,3 +46,16 @@ export function augmentUserMessage(message: string): string {
     '도입 문장만 출력하지 마.',
   ].join('\n');
 }
+
+export function augmentImagePrompt(message: string, imageCount: number): string {
+  const guide = [
+    `[첨부 이미지 ${imageCount}장이 있습니다. 반드시 이미지를 직접 보고 분석하세요.`,
+    '"이미지가 첨부되지 않았다"고 답하지 마세요.',
+    '이미지 속 한글·이름·날짜·숫자는 보이는 그대로 정확히 적고, 추측하거나 다른 글자로 바꾸지 마세요.',
+    '글자가 작거나 불분명하면 그렇다고 말하고, 확실한 부분만 인용하세요.]',
+    '',
+  ].join('\n');
+
+  const trimmed = message.trim();
+  return trimmed ? `${guide}${trimmed}` : guide.trim();
+}

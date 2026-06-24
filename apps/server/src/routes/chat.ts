@@ -1,6 +1,7 @@
 import type { AgentSessionEvent } from '@pie-lab/coding-agent';
 import type { FastifyInstance } from 'fastify';
 import {
+  augmentImagePrompt,
   augmentUserMessage,
   CONTINUE_PROMPT,
   needsContinuation,
@@ -187,7 +188,10 @@ export async function registerChatRoutes(
       });
 
       try {
-        let followUp = augmentUserMessage(message);
+        let followUp =
+          promptImages.length > 0
+            ? augmentImagePrompt(augmentUserMessage(message), promptImages.length)
+            : augmentUserMessage(message);
         const maxContinues = 2;
 
         for (let attempt = 0; attempt <= maxContinues; attempt++) {
