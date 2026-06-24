@@ -25,8 +25,9 @@ npm run dev
 
 | 값 | 도구 | 용도 |
 |----|------|------|
-| `chat` (기본) | 없음 (설명만) | 웹 노출 안전, 로컬 모델 환각 방지 |
-| `agent` | + bash, edit, write | 로컬 전용 |
+| **`web-agent`** (기본) | read, grep, find, ls, **fetch_url** | 웹 UI 에이전트 (URL 요약 등) |
+| `chat` | 없음 | 순수 대화 |
+| `agent` | + bash, edit, write | 로컬 전용 풀 에이전트 |
 
 ### 프로젝트 구조
 
@@ -58,6 +59,17 @@ npm run docker:down
 - Web UI: http://localhost:5173 (nginx → `/api` 프록시 → server)
 - Ollama API: http://localhost:11434 (호스트)
 - server → `http://host.docker.internal:11434/v1` 로 호스트 Ollama 연결
+
+#### 외부 URL 요약 (web-agent)
+
+`PIE_MODE=web-agent`일 때 pie 에이전트가 `fetch_url` 도구로 페이지를 가져온 뒤 요약합니다.
+
+```bash
+bash scripts/test-chat.sh "https://wikidocs.net/book/20347 내용 요약해줘"
+```
+
+- `.pie/extensions/web-agent.ts` — URL 선-fetch·SSRF 검증·bash 차단
+- UI에 도구 실행 타임라인 표시 (`fetch_url ✓`)
 
 #### E2E 테스트
 

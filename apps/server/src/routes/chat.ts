@@ -14,10 +14,47 @@ import {
 type SsePayload =
   | { type: 'delta'; text: string }
   | { type: 'reset' }
-  | { type: 'tool_start'; toolName: string }
-  | { type: 'tool_end'; toolName: string; isError: boolean }
+  | { type: 'tool_start'; toolName: string; args?: string }
+  | {
+      type: 'tool_update';
+      toolName: string;
+      preview: string;
+    }
+  | {
+      type: 'tool_end';
+      toolName: string;
+      isError: boolean;
+      preview?: string;
+    }
   | { type: 'error'; message: string }
   | { type: 'done' };
+
+function summarizeToolResult(result: unknown): string | undefined {
+  if (!result || typeof result !== 'object') return undefined;
+  const content = (result as { content?: Array<{ type?: string; text?: string }> })
+    .content;
+  if (!Array.isArray(content)) return undefined;
+  const text = content
+    .filter((part) => part.type === 'text' && typeof part.text === 'string')
+    .map((part) => part.text)
+    .join('\n')
+    .trim();
+  if (!text) return undefined;
+  return text.length > 240 ? `${text.slice(0, 240)}…` : text;
+}
+
+function summarizeToolArgs(args: unknown): string | undefined {
+  if (!args || typeof args !== 'object') return undefined;
+  const record = args as Record<string, unknown>;
+  if (typeof record.url === 'string') return record.url;
+  if (typeof record.command === 'string') {
+    return record.command.length > 120
+      ? `${record.command.slice(0, 120)}…`
+      : record.command;
+  }
+  const json = JSON.stringify(record);
+  return json.length > 120 ? `${json.slice(0, 120)}…` : json;
+}
 
 function writeSse(
   write: (chunk: string) => void,
@@ -49,7 +86,21 @@ function mapEventToSse(event: AgentSessionEvent): SsePayload | null {
   }
 
   if (event.type === 'tool_execution_start') {
-    return { type: 'tool_start', toolName: event.toolName };
+    return {
+      type: 'tool_start',
+      toolName: event.toolName,
+      args: summarizeToolArgs(event.args),
+    };
+  }
+
+  if (event.type === 'tool_execution_update') {
+    const preview = summarizeToolResult(event.partialResult);
+    if (!preview) return null;
+    return {
+      type: 'tool_update',
+      toolName: event.toolName,
+      preview,
+    };
   }
 
   if (event.type === 'tool_execution_end') {
@@ -57,6 +108,7 @@ function mapEventToSse(event: AgentSessionEvent): SsePayload | null {
       type: 'tool_end',
       toolName: event.toolName,
       isError: event.isError,
+      preview: summarizeToolResult(event.result),
     };
   }
 

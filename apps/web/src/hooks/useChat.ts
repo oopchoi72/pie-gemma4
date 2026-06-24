@@ -5,13 +5,14 @@ import {
   streamChat,
   type ChatMessage,
   type SseEvent,
+  type ToolRun,
 } from '../api/client';
 
 export function useChat(sessionId: string | null) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [toolEvents, setToolEvents] = useState<string[]>([]);
+  const [toolRuns, setToolRuns] = useState<ToolRun[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ export function useChat(sessionId: string | null) {
       };
 
       setMessages((prev) => [...prev, userMessage, assistantMessage]);
-      setToolEvents([]);
+      setToolRuns([]);
       setError(null);
       setIsStreaming(true);
 
@@ -87,15 +88,48 @@ export function useChat(sessionId: string | null) {
         }
 
         if (event.type === 'tool_start') {
-          setToolEvents((prev) => [...prev, `▶ ${event.toolName}`]);
+          setToolRuns((prev) => [
+            ...prev,
+            {
+              id: `${event.toolName}-${Date.now()}-${prev.length}`,
+              toolName: event.toolName,
+              args: event.args,
+              status: 'running',
+            },
+          ]);
+          return;
+        }
+
+        if (event.type === 'tool_update') {
+          setToolRuns((prev) => {
+            const index = [...prev]
+              .reverse()
+              .find((run) => run.toolName === event.toolName && run.status === 'running')
+              ?.id;
+            if (!index) return prev;
+            return prev.map((run) =>
+              run.id === index ? { ...run, preview: event.preview } : run,
+            );
+          });
           return;
         }
 
         if (event.type === 'tool_end') {
-          setToolEvents((prev) => [
-            ...prev,
-            `${event.isError ? '✗' : '✓'} ${event.toolName}`,
-          ]);
+          setToolRuns((prev) => {
+            const lastRunning = [...prev]
+              .reverse()
+              .find((run) => run.toolName === event.toolName && run.status === 'running');
+            if (!lastRunning) return prev;
+            return prev.map((run) =>
+              run.id === lastRunning.id
+                ? {
+                    ...run,
+                    status: event.isError ? 'error' : 'done',
+                    preview: event.preview ?? run.preview,
+                  }
+                : run,
+            );
+          });
           return;
         }
 
@@ -159,7 +193,7 @@ export function useChat(sessionId: string | null) {
     messages,
     isStreaming,
     error,
-    toolEvents,
+    toolRuns,
     sendMessage,
     abort,
   };

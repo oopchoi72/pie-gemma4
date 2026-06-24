@@ -21,7 +21,7 @@ ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3001
 ENV PIE_CWD=/app
-ENV PIE_MODE=chat
+ENV PIE_MODE=web-agent
 
 COPY package.json package-lock.json ./
 COPY apps/server/package.json apps/server/

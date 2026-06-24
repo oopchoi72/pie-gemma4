@@ -1,13 +1,14 @@
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
-import type { ChatMessage } from '../api/client';
+import type { ChatMessage, ToolRun } from '../api/client';
+import { ToolTimeline } from './ToolTimeline';
 
 interface ChatWindowProps {
   title: string;
   mode: string;
   model: string;
   messages: ChatMessage[];
-  toolEvents: string[];
+  toolRuns: ToolRun[];
   error: string | null;
   isStreaming: boolean;
   disabled?: boolean;
@@ -20,7 +21,7 @@ export function ChatWindow({
   mode,
   model,
   messages,
-  toolEvents,
+  toolRuns,
   error,
   isStreaming,
   disabled,
@@ -45,11 +46,7 @@ export function ChatWindow({
         </div>
       ) : null}
 
-      {toolEvents.length > 0 ? (
-        <div className="border-b border-white/10 bg-black/20 px-6 py-2 text-xs text-gray-400">
-          {toolEvents.join(' · ')}
-        </div>
-      ) : null}
+      <ToolTimeline runs={toolRuns} />
 
       <MessageList messages={messages} />
       <ChatInput

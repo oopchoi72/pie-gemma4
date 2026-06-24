@@ -13,11 +13,25 @@ export interface ChatMessage {
   streaming?: boolean;
 }
 
+export interface ToolRun {
+  id: string;
+  toolName: string;
+  args?: string;
+  status: 'running' | 'done' | 'error';
+  preview?: string;
+}
+
 export type SseEvent =
   | { type: 'delta'; text: string }
   | { type: 'reset' }
-  | { type: 'tool_start'; toolName: string }
-  | { type: 'tool_end'; toolName: string; isError: boolean }
+  | { type: 'tool_start'; toolName: string; args?: string }
+  | { type: 'tool_update'; toolName: string; preview: string }
+  | {
+      type: 'tool_end';
+      toolName: string;
+      isError: boolean;
+      preview?: string;
+    }
   | { type: 'error'; message: string }
   | { type: 'done' };
 

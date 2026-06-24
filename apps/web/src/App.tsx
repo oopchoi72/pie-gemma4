@@ -21,7 +21,7 @@ export default function App() {
   );
 
   const activeSession = sessions.find((session) => session.id === activeSessionId);
-  const { messages, isStreaming, error, toolEvents, sendMessage, abort } =
+  const { messages, isStreaming, error, toolRuns, sendMessage, abort } =
     useChat(activeSessionId);
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function App() {
           mode={health?.mode ?? activeSession.mode}
           model={health?.model ?? 'ollama/gemma'}
           messages={messages}
-          toolEvents={toolEvents}
+          toolRuns={toolRuns}
           error={sessionError ?? error}
           isStreaming={isStreaming}
           disabled={!activeSessionId}

@@ -15,10 +15,12 @@ for (const envPath of [
   }
 }
 
-export type PieMode = 'chat' | 'agent';
+export type PieMode = 'chat' | 'web-agent' | 'agent';
 
 function parseMode(value: string | undefined): PieMode {
-  return value === 'agent' ? 'agent' : 'chat';
+  if (value === 'agent') return 'agent';
+  if (value === 'chat') return 'chat';
+  return 'web-agent';
 }
 
 export const config = {
@@ -43,8 +45,11 @@ export const config = {
 };
 
 export function getToolsForMode(mode: PieMode): string[] {
-  // Web chat mode: no tool schemas in context — avoids local-model hallucination
-  // and mid-response EOS when describing capabilities.
   if (mode === 'chat') return [];
+  if (mode === 'web-agent') return ['read', 'grep', 'find', 'ls'];
   return ['read', 'bash', 'edit', 'write', 'grep', 'find', 'ls'];
+}
+
+export function usesFetchUrlTool(mode: PieMode): boolean {
+  return mode === 'web-agent';
 }

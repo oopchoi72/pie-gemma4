@@ -10,7 +10,7 @@ services:
     environment:
       HOST: 0.0.0.0
       PORT: 3001
-      PIE_MODE: ${PIE_MODE:-chat}
+      PIE_MODE: ${PIE_MODE:-web-agent}
       PIE_CWD: /app
       OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
       OLLAMA_API_KEY: ollama
