@@ -10,11 +10,11 @@
       },
       "models": [
         {
-          "id": "gemma4:e2b-it-qat",
-          "name": "Gemma 4 E2B IT QAT (Ollama)",
+          "id": "gemma4:12b",
+          "name": "Gemma 4 12B (Ollama)",
           "reasoning": false,
           "input": ["text", "image"],
-          "contextWindow": 131072,
+          "contextWindow": 256000,
           "maxTokens": 8192,
           "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 }
         }
