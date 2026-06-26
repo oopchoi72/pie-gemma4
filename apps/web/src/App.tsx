@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { fetchHealth } from './api/client';
+import {
+  fetchHealth,
+  fetchModels,
+  type ModelInfo,
+} from './api/client';
 import { ChatWindow } from './components/ChatWindow';
 import { SessionSidebar } from './components/SessionSidebar';
 import { useChat } from './hooks/useChat';
@@ -14,11 +18,15 @@ export default function App() {
     error: sessionError,
     create,
     remove,
+    updateModel,
   } = useSessions();
 
-  const [health, setHealth] = useState<{ mode: string; model: string } | null>(
-    null,
-  );
+  const [health, setHealth] = useState<{
+    mode: string;
+    defaultModel: string;
+  } | null>(null);
+  const [models, setModels] = useState<ModelInfo[]>([]);
+  const [modelError, setModelError] = useState<string | null>(null);
 
   const activeSession = sessions.find((session) => session.id === activeSessionId);
   const { messages, isStreaming, error, toolRuns, sendMessage, abort } =
@@ -26,15 +34,43 @@ export default function App() {
 
   useEffect(() => {
     void fetchHealth()
-      .then((data) => setHealth({ mode: data.mode, model: data.model }))
+      .then((data) =>
+        setHealth({ mode: data.mode, defaultModel: data.defaultModel }),
+      )
       .catch(() => setHealth(null));
+
+    void fetchModels()
+      .then((data) => {
+        setModels(data.models);
+        setModelError(null);
+      })
+      .catch((err) => {
+        setModels([]);
+        setModelError(
+          err instanceof Error ? err.message : 'Failed to load models',
+        );
+      });
   }, []);
 
   useEffect(() => {
     if (!loading && !activeSessionId) {
-      void create();
+      void create(health?.defaultModel);
     }
-  }, [activeSessionId, create, loading]);
+  }, [activeSessionId, create, health?.defaultModel, loading]);
+
+  const handleCreateSession = () => {
+    const model = activeSession?.model ?? health?.defaultModel;
+    void create(model);
+  };
+
+  const handleModelChange = (modelId: string) => {
+    if (!activeSessionId || !activeSession || activeSession.model === modelId) {
+      return;
+    }
+    void updateModel(activeSessionId, modelId).catch((err) => {
+      setModelError(err instanceof Error ? err.message : 'Failed to change model');
+    });
+  };
 
   return (
     <div className="flex h-full">
@@ -43,7 +79,7 @@ export default function App() {
         activeSessionId={activeSessionId}
         loading={loading}
         onSelect={setActiveSessionId}
-        onCreate={() => void create()}
+        onCreate={handleCreateSession}
         onDelete={(sessionId) => void remove(sessionId)}
       />
 
@@ -51,12 +87,14 @@ export default function App() {
         <ChatWindow
           title={activeSession.name}
           mode={health?.mode ?? activeSession.mode}
-          model={health?.model ?? 'ollama/gemma'}
+          models={models}
+          model={activeSession.model}
           messages={messages}
           toolRuns={toolRuns}
-          error={sessionError ?? error}
+          error={sessionError ?? modelError ?? error}
           isStreaming={isStreaming}
           disabled={!activeSessionId}
+          onModelChange={handleModelChange}
           onSend={(message, images) => void sendMessage(message, images)}
           onAbort={() => void abort()}
         />

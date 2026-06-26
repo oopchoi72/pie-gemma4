@@ -3,6 +3,7 @@ import {
   createSession,
   deleteSession,
   listSessions,
+  updateSessionModel,
   type SessionMeta,
 } from '../api/client';
 
@@ -35,11 +36,19 @@ export function useSessions() {
     void refresh();
   }, [refresh]);
 
-  const create = useCallback(async () => {
-    const session = await createSession();
+  const create = useCallback(async (model?: string) => {
+    const session = await createSession(undefined, model);
     setSessions((prev) => [session, ...prev]);
     setActiveSessionId(session.id);
     return session;
+  }, []);
+
+  const updateModel = useCallback(async (sessionId: string, model: string) => {
+    const updated = await updateSessionModel(sessionId, model);
+    setSessions((prev) =>
+      prev.map((session) => (session.id === sessionId ? updated : session)),
+    );
+    return updated;
   }, []);
 
   const remove = useCallback(
@@ -62,5 +71,6 @@ export function useSessions() {
     refresh,
     create,
     remove,
+    updateModel,
   };
 }

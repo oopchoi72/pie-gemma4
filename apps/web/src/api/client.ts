@@ -2,7 +2,15 @@ export interface SessionMeta {
   id: string;
   name: string;
   createdAt: string;
-  mode: 'chat' | 'agent';
+  mode: 'chat' | 'web-agent' | 'agent';
+  model: string;
+}
+
+export interface ModelInfo {
+  provider: string;
+  id: string;
+  name: string;
+  input: ('text' | 'image')[];
 }
 
 export interface ChatImageAttachment {
@@ -57,8 +65,17 @@ async function parseJson<T>(response: Response): Promise<T> {
 }
 
 export async function fetchHealth() {
-  return parseJson<{ ok: boolean; mode: string; model: string }>(
-    await fetch('/api/health'),
+  return parseJson<{
+    ok: boolean;
+    mode: string;
+    defaultModel: string;
+    model: string;
+  }>(await fetch('/api/health'));
+}
+
+export async function fetchModels() {
+  return parseJson<{ defaultModel: string; models: ModelInfo[] }>(
+    await fetch('/api/models'),
   );
 }
 
@@ -69,12 +86,22 @@ export async function listSessions() {
   return data.sessions;
 }
 
-export async function createSession(name?: string) {
+export async function createSession(name?: string, model?: string) {
   return parseJson<SessionMeta>(
     await fetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, model }),
+    }),
+  );
+}
+
+export async function updateSessionModel(sessionId: string, model: string) {
+  return parseJson<SessionMeta>(
+    await fetch(`/api/sessions/${sessionId}/model`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model }),
     }),
   );
 }

@@ -3,10 +3,10 @@ import {
   createAgentSession,
   DefaultResourceLoader,
   getAgentDir,
-  ModelRegistry,
   SessionManager,
   type AgentSession,
 } from '@pie-lab/coding-agent';
+import { resolveModel } from './models.js';
 import {
   config,
   getToolsForMode,
@@ -51,22 +51,14 @@ function systemPromptForMode(mode: PieMode): string {
   return 'You are a coding assistant with access to project files and shell tools.';
 }
 
-export async function createChatSession(mode: PieMode): Promise<AgentSession> {
+export async function createChatSession(
+  mode: PieMode,
+  modelName?: string,
+): Promise<AgentSession> {
   const authStorage = AuthStorage.create();
   authStorage.setRuntimeApiKey('ollama', config.ollamaApiKey);
 
-  const modelRegistry = ModelRegistry.create(authStorage, config.modelsJsonPath);
-  const model = modelRegistry.find(config.provider, config.modelName);
-
-  if (!model) {
-    throw new Error(
-      `Model not found: ${config.provider}/${config.modelName}. Check .pie/models.json`,
-    );
-  }
-
-  if (config.ollamaBaseUrl) {
-    model.baseUrl = config.ollamaBaseUrl;
-  }
+  const { model, registry: modelRegistry } = resolveModel(modelName);
 
   const resourceLoader = new DefaultResourceLoader({
     cwd: config.pieCwd,

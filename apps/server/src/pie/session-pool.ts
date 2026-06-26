@@ -1,7 +1,8 @@
 import type { AgentSession } from '@pie-lab/coding-agent';
 import { randomUUID } from 'node:crypto';
+import { config, type PieMode } from '../config.js';
 import { createChatSession } from './factory.js';
-import type { PieMode } from '../config.js';
+import { resolveModel } from './models.js';
 
 interface ImagePart {
   type: 'image';
@@ -27,6 +28,7 @@ export interface ChatSessionMeta {
   name: string;
   createdAt: string;
   mode: PieMode;
+  model: string;
 }
 
 export interface StoredSession {
@@ -90,14 +92,20 @@ export class SessionPool {
     return this.sessions.get(id);
   }
 
-  async create(name?: string, mode?: PieMode): Promise<ChatSessionMeta> {
+  async create(
+    name?: string,
+    mode?: PieMode,
+    modelName?: string,
+  ): Promise<ChatSessionMeta> {
     const sessionMode = mode ?? this.defaultMode;
-    const session = await createChatSession(sessionMode);
+    const model = modelName ?? config.modelName;
+    const session = await createChatSession(sessionMode, model);
     const meta: ChatSessionMeta = {
       id: randomUUID(),
       name: name?.trim() || `Chat ${this.sessions.size + 1}`,
       createdAt: new Date().toISOString(),
       mode: sessionMode,
+      model,
     };
 
     this.sessions.set(meta.id, {
@@ -135,6 +143,18 @@ export class SessionPool {
     entry.isStreaming = isStreaming;
   }
 
+  async setModel(id: string, modelName: string): Promise<ChatSessionMeta> {
+    const entry = this.require(id);
+    if (entry.isStreaming) {
+      throw new SessionBusyError(id);
+    }
+
+    const { model } = resolveModel(modelName);
+    await entry.session.setModel(model);
+    entry.meta.model = modelName;
+    return entry.meta;
+  }
+
   remove(id: string): boolean {
     const entry = this.sessions.get(id);
     if (!entry) return false;
@@ -156,5 +176,12 @@ export class SessionNotFoundError extends Error {
   constructor(id: string) {
     super(`Session not found: ${id}`);
     this.name = 'SessionNotFoundError';
+  }
+}
+
+export class SessionBusyError extends Error {
+  constructor(id: string) {
+    super(`Session is busy: ${id}`);
+    this.name = 'SessionBusyError';
   }
 }
