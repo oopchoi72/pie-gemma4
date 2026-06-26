@@ -39,7 +39,7 @@ export const config = {
   provider: 'ollama' as const,
   modelName:
     process.env.MODEL_NAME ??
-    'gemma4:12b',
+    'gemma4:e2b-it-qat',
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/v1',
   ollamaApiKey: process.env.OLLAMA_API_KEY ?? 'ollama',
 };
