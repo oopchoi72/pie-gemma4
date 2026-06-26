@@ -292,6 +292,45 @@ pie --export ~/.pie/agent/sessions/--path--/session.jsonl
 pie --export session.jsonl output.html
 ```
 
+## pi CLI (터미널, 웹과 동일 모델)
+
+웹 챗봇과 같은 Ollama 모델을 `pi` CLI에서 쓰려면 `~/.pi/agent/models.json`에 등록한다 (`models.json` 복수형 — `model.json`은 무시됨).
+
+```json
+{
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://localhost:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        { "id": "gemma4:e2b-it-qat", "input": ["text", "image"], "contextWindow": 131072, "maxTokens": 8192 }
+      ]
+    }
+  }
+}
+```
+
+`~/.pi/agent/settings.json`:
+
+```json
+{
+  "defaultProvider": "ollama",
+  "defaultModel": "gemma4:e2b-it-qat"
+}
+```
+
+```bash
+ollama serve
+pi --list-models gemma    # ollama/gemma4:e2b-it-qat 확인
+pi                        # 대화형
+pi -p "질문" @image.png   # 이미지 첨부
+```
+
 ## 로컬 Ollama (Gemma) 예시
 
 로컬 Ollama를 OpenAI 호환 API로 쓰는 경우:
