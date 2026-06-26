@@ -292,9 +292,13 @@ pie --export ~/.pie/agent/sessions/--path--/session.jsonl
 pie --export session.jsonl output.html
 ```
 
-## pi CLI (터미널, 웹과 동일 모델)
+## pi CLI (터미널)
 
-웹 챗봇과 같은 Ollama 모델을 `pi` CLI에서 쓰려면 `~/.pi/agent/models.json`에 등록한다 (`models.json` 복수형 — `model.json`은 무시됨).
+`pi`는 `~/.pi/agent/models.json`에 모델을 등록한다 (`models.json` 복수형 — `model.json`은 무시됨).
+
+**권장 역할 분리:**
+- **`pi` 기본** → `xentriom/gemma-4-12B-coder-...` (도구 `ls`/`read`/`bash` 등)
+- **이미지 분석** → `gemma4:e2b-it-qat` (`pi --model gemma4:e2b-it-qat` 또는 Ctrl+P)
 
 ```json
 {
@@ -308,7 +312,8 @@ pie --export session.jsonl output.html
         "supportsReasoningEffort": false
       },
       "models": [
-        { "id": "gemma4:e2b-it-qat", "input": ["text", "image"], "contextWindow": 131072, "maxTokens": 8192 }
+        { "id": "xentriom/gemma-4-12B-coder-fable5-composer2.5-v1:Q4_K_M", "input": ["text"] },
+        { "id": "gemma4:e2b-it-qat", "input": ["text", "image"] }
       ]
     }
   }
@@ -320,15 +325,15 @@ pie --export session.jsonl output.html
 ```json
 {
   "defaultProvider": "ollama",
-  "defaultModel": "gemma4:e2b-it-qat"
+  "defaultModel": "xentriom/gemma-4-12B-coder-fable5-composer2.5-v1:Q4_K_M"
 }
 ```
 
 ```bash
 ollama serve
-pi --list-models gemma    # ollama/gemma4:e2b-it-qat 확인
-pi                        # 대화형
-pi -p "질문" @image.png   # 이미지 첨부
+pi --list-models ollama
+pi                        # 12B coder (도구 사용)
+pi --model gemma4:e2b-it-qat @image.png "설명해줘"   # vision
 ```
 
 ## 로컬 Ollama (Gemma) 예시
